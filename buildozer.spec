@@ -54,10 +54,10 @@ android.ndk = 25b
 android.sdk = 31
 
 # (list) Android application meta-data to set (key=value format)
-android.meta_data = com.hsr.automation.ACCESSIBILITY_SERVICE_CONFIG=@xml/accessibility_service_config
+#android.meta_data = com.hsr.automation.ACCESSIBILITY_SERVICE_CONFIG=@xml/accessibility_service_config
 
-# (list) Android services to add
-android.services = com.hsr.automation.HSRAccessibilityService:foregroundService=true 
+# (list) Android services to add (暂时禁用Java服务，使用纯Python方案)
+#android.services = com.hsr.automation.HSRAccessibilityService:foregroundService=true 
 
 # (list) Android library project to add (will be added in the
 # project.properties automatically.)
@@ -73,7 +73,7 @@ android.copy_libs = 1
 android.arch = arm64-v8a
 
 # (list) Permissions
-android.permissions = SYSTEM_ALERT_WINDOW,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK,FOREGROUND_SERVICE,BIND_ACCESSIBILITY_SERVICE
+android.permissions = SYSTEM_ALERT_WINDOW,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing

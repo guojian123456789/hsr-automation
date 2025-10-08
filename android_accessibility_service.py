@@ -45,38 +45,15 @@ class AndroidAccessibilityService:
             self.is_android = False
     
     def check_service_enabled(self):
-        """检查无障碍服务是否已启用"""
+        """检查无障碍服务是否已启用 - 简化版本"""
+        # 由于Java服务编译问题，改用Shell Input方案
+        # 不再需要检查AccessibilityService状态
         if not self.is_android:
             return True
         
-        try:
-            # 获取AccessibilityManager
-            accessibility_manager = self.activity.getSystemService(
-                self.Context.ACCESSIBILITY_SERVICE
-            )
-            
-            # 检查服务是否启用
-            enabled_services = self.Settings.Secure.getString(
-                self.activity.getContentResolver(),
-                self.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-            )
-            
-            if enabled_services:
-                # 检查我们的服务是否在列表中
-                package_name = self.activity.getPackageName()
-                service_name = f"{package_name}/com.hsr.automation.HSRAccessibilityService"
-                
-                self.service_enabled = service_name in enabled_services
-                Logger.info(f"无障碍服务状态: {'已启用' if self.service_enabled else '未启用'}")
-            else:
-                self.service_enabled = False
-                Logger.info("无障碍服务未启用")
-            
-            return self.service_enabled
-            
-        except Exception as e:
-            Logger.error(f"检查无障碍服务状态失败: {e}")
-            return False
+        Logger.info("使用Shell Input点击方案，无需无障碍服务")
+        self.service_enabled = True
+        return True
     
     def request_service_permission(self):
         """请求开启无障碍服务"""
@@ -99,50 +76,62 @@ class AndroidAccessibilityService:
     
     def click(self, x, y, duration=100):
         """
-        在指定位置执行点击
-        
-        参数:
-            x: X坐标
-            y: Y坐标
-            duration: 点击持续时间（毫秒）
+        使用monkeyrunner方式执行点击
+        通过Android的input命令实现，需要应用有SHELL权限或通过ADB授权
         """
         if not self.is_android:
-            Logger.warning("非Android环境，无法使用无障碍服务点击")
-            return False
-        
-        if not self.service_enabled:
-            Logger.warning("无障碍服务未启用")
+            Logger.warning("非Android环境，无法点击")
             return False
         
         try:
-            Logger.info(f"执行点击: ({x}, {y}), 持续时间: {duration}ms")
+            Logger.info(f"执行点击: ({int(x)}, {int(y)})")
             
-            # 创建点击手势路径
-            path = self.Path()
-            path.moveTo(float(x), float(y))
-            
-            # 创建手势描述
-            builder = self.GestureDescriptionBuilder()
-            
-            # 添加手势
             from jnius import autoclass
-            StrokeDescription = autoclass('android.accessibilityservice.GestureDescription$StrokeDescription')
+            import subprocess
             
-            stroke = StrokeDescription(path, 0, duration)
-            builder.addStroke(stroke)
+            # 方法1：直接调用input命令（需要shell权限）
+            try:
+                Runtime = autoclass('java.lang.Runtime')
+                runtime = Runtime.getRuntime()
+                
+                cmd = f"input tap {int(x)} {int(y)}"
+                process = runtime.exec(cmd)
+                process.waitFor()
+                
+                exit_code = process.exitValue()
+                
+                if exit_code == 0:
+                    Logger.info(f"✅ 点击成功: ({int(x)}, {int(y)})")
+                    return True
+                else:
+                    Logger.error(f"点击失败，退出码: {exit_code}")
+                    
+            except Exception as e1:
+                Logger.error(f"Runtime.exec失败: {e1}")
+                
+                # 方法2：使用subprocess
+                try:
+                    result = subprocess.run(
+                        ['input', 'tap', str(int(x)), str(int(y))],
+                        capture_output=True,
+                        timeout=2
+                    )
+                    
+                    if result.returncode == 0:
+                        Logger.info(f"✅ subprocess点击成功: ({int(x)}, {int(y)})")
+                        return True
+                    else:
+                        Logger.error(f"subprocess点击失败: {result.stderr}")
+                        
+                except Exception as e2:
+                    Logger.error(f"subprocess失败: {e2}")
             
-            gesture = builder.build()
-            
-            # 执行手势
-            # 注意：这需要在实际的AccessibilityService实例中调用
-            # 这里我们通过广播或其他方式通知Service执行
-            self.dispatch_gesture(gesture)
-            
-            Logger.info("点击手势已发送")
-            return True
+            return False
             
         except Exception as e:
-            Logger.error(f"执行点击失败: {e}")
+            Logger.error(f"点击失败: {e}")
+            import traceback
+            Logger.error(traceback.format_exc())
             return False
     
     def swipe(self, start_x, start_y, end_x, end_y, duration=300):

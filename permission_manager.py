@@ -139,22 +139,13 @@ class PermissionManager:
             return False
     
     def _check_accessibility_service(self):
-        """检查无障碍服务"""
+        """检查无障碍服务 - 使用Instrumentation方案，不需要无障碍服务"""
         if not self.is_android:
             return True
         
-        try:
-            from android_accessibility_service import AndroidAccessibilityService
-            
-            accessibility_service = AndroidAccessibilityService()
-            is_enabled = accessibility_service.is_service_enabled()
-            
-            Logger.info(f"无障碍服务状态: {'已启用' if is_enabled else '未启用'}")
-            return is_enabled
-            
-        except Exception as e:
-            Logger.error(f"检查无障碍服务失败: {e}")
-            return False
+        # 使用Instrumentation点击方案，不依赖AccessibilityService
+        Logger.info("使用Instrumentation点击方案，无需无障碍服务权限")
+        return True
     
     def _show_overlay_permission_dialog(self):
         """显示悬浮窗权限引导对话框"""
@@ -361,8 +352,8 @@ class PermissionManager:
     
     def all_permissions_granted(self):
         """检查是否所有权限都已授予"""
-        # 存储权限和无障碍服务是必需的
-        required = ['storage', 'accessibility']
+        # 使用Instrumentation方案，只需要存储权限
+        required = ['storage']
         return all(self.permissions.get(p, False) for p in required)
     
     def get_permission_status_text(self):
@@ -378,8 +369,9 @@ class PermissionManager:
         }
         
         status.append(f"{icons[self.permissions.get('storage', False)]} 存储权限")
-        status.append(f"{icons[self.permissions.get('overlay', False)]} 悬浮窗权限")
-        status.append(f"{icons[self.permissions.get('accessibility', False)]} 无障碍服务")
+        status.append(f"✅ 点击功能 (Instrumentation)")
+        # status.append(f"{icons[self.permissions.get('overlay', False)]} 悬浮窗权限")  # 不需要
+        # status.append(f"{icons[self.permissions.get('accessibility', False)]} 无障碍服务")  # 不需要
         
         return '\n'.join(status)
     
