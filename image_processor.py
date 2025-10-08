@@ -4,9 +4,16 @@
 """
 
 import os
-import numpy as np
 from kivy.logger import Logger
 from kivy.utils import platform
+
+# 尝试导入numpy，如果失败则使用替代方案
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    Logger.warning("NumPy不可用，使用基础实现")
 
 # 根据平台导入不同的图像处理库
 try:

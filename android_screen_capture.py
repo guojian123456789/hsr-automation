@@ -5,7 +5,14 @@ Android屏幕截图模块
 
 from kivy.logger import Logger
 from kivy.utils import platform
-import numpy as np
+
+# 尝试导入numpy
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    Logger.warning("NumPy不可用，Android截图功能可能受限")
 
 class AndroidScreenCapture:
     """Android屏幕截图类"""
