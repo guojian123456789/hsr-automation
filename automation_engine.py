@@ -98,35 +98,50 @@ class AutomationEngine:
             return False
     
     def execute_login_task(self, task):
-        """执行登录任务 - 持续监控模式"""
-        Logger.info("开始执行登录流程")
+        """执行登录任务 - 智能持续检测模式"""
+        Logger.info("开始执行登录流程 - 智能等待游戏加载")
         
-        # 第一阶段：持续检测 login_button_first（最多5秒）
-        Logger.info("🔍 第一阶段：持续检测首次登录按钮（每秒检查一次，最多5秒）")
-        first_stage_start = time.time()
-        first_stage_max_duration = 5  # 最多检查5秒
+        # 第一阶段：持续检测 first OR screen/button（无时间限制）
+        # 因为游戏刚启动，可能需要较长时间加载
+        Logger.info("🔍 第一阶段：持续检测首次登录按钮或游戏界面（无时间限制）")
+        first_stage_images = ['login_button_first', 'game_start_screen', 'login_button']
+        first_button_clicked = False
         
-        while time.time() - first_stage_start < first_stage_max_duration:
+        while True:
             if not self.is_running:
                 return False
             
             screenshot = self.image_processor.capture_screen()
-            if screenshot is not None:
-                result = self.image_processor.find_image(screenshot, 'login_button_first')
-                if result:
-                    Logger.info("✅ 找到首次登录按钮，立即点击")
-                    center_x, center_y = result['center']
-                    if self.game_controller.click_position((center_x, center_y)):
-                        Logger.info("首次登录按钮点击成功，等待3秒界面切换")
-                        time.sleep(3)
-                        break  # 找到并点击后立即退出第一阶段
-                    else:
-                        Logger.error("首次登录按钮点击失败")
+            if screenshot is None:
+                Logger.warning("无法获取屏幕截图，1秒后重试")
+                time.sleep(1)
+                continue
             
-            time.sleep(1)  # 每秒检查一次
-        
-        if time.time() - first_stage_start >= first_stage_max_duration:
-            Logger.info("⏰ 第一阶段超时，未找到首次登录按钮")
+            # 优先检测 login_button_first
+            result = self.image_processor.find_image(screenshot, 'login_button_first')
+            if result:
+                Logger.info("✅ 找到首次登录按钮，立即点击")
+                center_x, center_y = result['center']
+                if self.game_controller.click_position((center_x, center_y)):
+                    Logger.info("首次登录按钮点击成功，等待2秒界面切换")
+                    time.sleep(2)
+                    first_button_clicked = True
+                    break  # 点击first后进入第二阶段
+            
+            # 如果没有first，检测screen或button（可能直接出现）
+            for image_name in ['game_start_screen', 'login_button']:
+                result = self.image_processor.find_image(screenshot, image_name)
+                if result:
+                    Logger.info(f"✅ 直接检测到: {image_name}（跳过first）")
+                    # 直接进入第二阶段处理
+                    break
+            else:
+                # 如果都没检测到，继续循环
+                time.sleep(1)
+                continue
+            
+            # 检测到screen或button，跳出循环
+            break
         
         # 第二阶段：持续检测 game_start_screen 和 login_button（无时间限制）
         Logger.info("🔍 第二阶段：持续检测游戏开始界面和登录按钮（每秒检查一次，无时间限制）")

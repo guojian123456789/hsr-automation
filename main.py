@@ -329,20 +329,30 @@ class HSRAutomationApp(App):
             Logger.info("初始化游戏启动器...")
             
             if platform == 'android':
+                # 获取已安装游戏列表
+                installed_games = self.game_launcher.get_installed_games()
+                Logger.info(f"已安装的游戏: {installed_games}")
+                
                 # 自动检测游戏
                 game_name = self.game_launcher.auto_detect_game()
                 
                 if game_name:
                     Logger.info(f"✅ 检测到游戏: {game_name}")
-                    self.update_status(f"Ready - {game_name} detected")
+                    Logger.info(f"包名: {self.game_launcher.game_package_name}")
+                    self.update_status(f"就绪 - 已检测到{game_name}")
                 else:
-                    Logger.warning("⚠️ 未检测到游戏，请确保已安装崩坏：星穹铁道")
-                    self.update_status("Ready - No game detected")
+                    Logger.warning("⚠️ 未检测到游戏")
+                    Logger.warning("请确保已安装以下游戏之一：")
+                    Logger.warning("- 崩坏：星穹铁道 (国服)")
+                    Logger.warning("- 崩坏：星穹铁道 (国际服)")
+                    self.update_status("就绪 - 未检测到游戏")
             else:
                 Logger.info("桌面环境，跳过游戏检测")
                 
         except Exception as e:
             Logger.error(f"游戏启动器初始化失败: {e}")
+            import traceback
+            Logger.error(traceback.format_exc())
     
     def start_automation(self, instance):
         """Start automation"""
@@ -362,16 +372,29 @@ class HSRAutomationApp(App):
         
         # Step 1: Launch game (if Android)
         if platform == 'android':
-            self.update_status("Launching game...")
+            # 检查是否检测到游戏
+            if not self.game_launcher.game_package_name:
+                Logger.warning("⚠️ 未设置游戏包名，尝试重新检测...")
+                game_name = self.game_launcher.auto_detect_game()
+                
+                if not game_name:
+                    Logger.error("❌ 未检测到游戏，无法启动")
+                    self.update_status("未检测到游戏")
+                    self.reset_buttons()
+                    return
             
-            if self.game_launcher.launch_game_and_wait(wait_seconds=5):
-                Logger.info("✅ 游戏已启动，等待加载...")
-                self.update_status("Game launched, starting automation...")
-            else:
+            self.update_status("正在启动游戏...")
+            Logger.info(f"准备启动游戏: {self.game_launcher.game_package_name}")
+            
+            # 启动游戏（不等待固定时间）
+            if not self.game_launcher.launch_game():
                 Logger.error("❌ 游戏启动失败")
-                self.update_status("Failed to launch game")
+                self.update_status("游戏启动失败")
                 self.reset_buttons()
                 return
+            
+            Logger.info("✅ 游戏启动命令已发送")
+            self.update_status("等待游戏加载...")
         
         # Step 2: Run automation in background thread
         self.update_status("Running...")
