@@ -22,6 +22,8 @@ from kivy.utils import platform
 # Import core modules
 from automation_engine import AutomationEngine
 from android_utils import AndroidUtils
+from permission_manager import PermissionManager
+from game_launcher import GameLauncher, GamePackageNames
 
 class HSRAutomationApp(App):
     """Honkai Star Rail Automation Application"""
@@ -30,6 +32,8 @@ class HSRAutomationApp(App):
         super().__init__(**kwargs)
         self.automation = None
         self.android_utils = AndroidUtils()
+        self.permission_manager = None  # 将在build后初始化
+        self.game_launcher = GameLauncher()  # 游戏启动器
         self.is_running = False
         self.status_text = "Ready"
         self.daily_commission_enabled = True  # Default enabled
@@ -233,6 +237,12 @@ class HSRAutomationApp(App):
         # Initialize automation engine
         self.init_automation()
         
+        # Initialize permission manager and request permissions on startup
+        self.init_permissions()
+        
+        # Auto-detect and set game package name
+        self.init_game_launcher()
+        
         return main_layout
     
     def _update_bg(self, instance, value):
@@ -258,6 +268,62 @@ class HSRAutomationApp(App):
             Logger.error(f"Initialization failed: {e}")
             self.update_status(f"Init failed: {str(e)}")
     
+    def init_permissions(self):
+        """初始化权限管理器并自动请求权限"""
+        try:
+            Logger.info("初始化权限管理器...")
+            
+            self.permission_manager = PermissionManager(self)
+            
+            # 延迟0.5秒后自动请求权限（等待UI完全加载）
+            Clock.schedule_once(self._auto_request_permissions, 0.5)
+            
+        except Exception as e:
+            Logger.error(f"权限管理器初始化失败: {e}")
+    
+    def _auto_request_permissions(self, dt):
+        """自动请求所有必要权限"""
+        if platform == 'android':
+            Logger.info("🔑 开始自动权限请求...")
+            self.update_status("Requesting permissions...")
+            
+            # 自动请求权限
+            self.permission_manager.request_all_permissions(
+                callback=self._on_permissions_ready
+            )
+        else:
+            Logger.info("桌面环境，跳过权限请求")
+    
+    def _on_permissions_ready(self, all_granted):
+        """权限请求完成回调"""
+        if all_granted:
+            Logger.info("✅ 所有权限已授予")
+            self.update_status("Ready - All permissions granted")
+        else:
+            Logger.warning("⚠️ 部分权限未授予")
+            self.update_status("Ready - Some permissions missing")
+    
+    def init_game_launcher(self):
+        """初始化游戏启动器"""
+        try:
+            Logger.info("初始化游戏启动器...")
+            
+            if platform == 'android':
+                # 自动检测游戏
+                game_name = self.game_launcher.auto_detect_game()
+                
+                if game_name:
+                    Logger.info(f"✅ 检测到游戏: {game_name}")
+                    self.update_status(f"Ready - {game_name} detected")
+                else:
+                    Logger.warning("⚠️ 未检测到游戏，请确保已安装崩坏：星穹铁道")
+                    self.update_status("Ready - No game detected")
+            else:
+                Logger.info("桌面环境，跳过游戏检测")
+                
+        except Exception as e:
+            Logger.error(f"游戏启动器初始化失败: {e}")
+    
     def start_automation(self, instance):
         """Start automation"""
         if self.is_running:
@@ -267,14 +333,27 @@ class HSRAutomationApp(App):
         if platform == 'android' and not self.android_utils.check_permissions():
             self.update_status("Permissions required")
             return
-            
+        
         Logger.info("Starting automation tasks")
         self.is_running = True
         self.start_btn.disabled = True
         self.stop_btn.disabled = False
-        self.update_status("Running...")
         
-        # Run automation in background thread
+        # Step 1: Launch game (if Android)
+        if platform == 'android':
+            self.update_status("Launching game...")
+            
+            if self.game_launcher.launch_game_and_wait(wait_seconds=5):
+                Logger.info("✅ 游戏已启动，等待加载...")
+                self.update_status("Game launched, starting automation...")
+            else:
+                Logger.error("❌ 游戏启动失败")
+                self.update_status("Failed to launch game")
+                self.reset_buttons()
+                return
+        
+        # Step 2: Run automation in background thread
+        self.update_status("Running...")
         threading.Thread(target=self.run_automation_thread, daemon=True).start()
     
     def stop_automation(self, instance):
@@ -351,51 +430,91 @@ class HSRAutomationApp(App):
         if platform == 'android':
             # Android permissions settings
             title = Label(
-                text='Android Permissions',
-                size_hint=(1, 0.2),
-                font_size='16sp'
+                text='[size=18][b]权限设置[/b][/size]',
+                size_hint=(1, 0.15),
+                markup=True,
+                halign='center'
             )
+            title.bind(size=title.setter('text_size'))
             content.add_widget(title)
             
             # Permission status
-            perm_status = self.android_utils.get_permission_status()
+            if self.permission_manager:
+                perm_status = self.permission_manager.get_permission_status_text()
+            else:
+                perm_status = "权限管理器未初始化"
+            
             status_label = Label(
-                text=perm_status,
-                size_hint=(1, 0.3),
-                text_size=(None, None),
+                text=f'[size=14]{perm_status}[/size]',
+                size_hint=(1, 0.25),
+                markup=True,
                 halign='left',
-                font_size='14sp'
+                valign='top'
             )
             status_label.bind(size=status_label.setter('text_size'))
             content.add_widget(status_label)
             
             # Permission setting buttons
-            btn_layout = BoxLayout(orientation='vertical', size_hint=(1, 0.3), spacing=5)
+            btn_layout = BoxLayout(orientation='vertical', size_hint=(1, 0.4), spacing=8)
             
-            overlay_btn = Button(text='Enable Overlay Permission', size_hint=(1, 0.5))
-            overlay_btn.bind(on_press=lambda x: self.android_utils.request_overlay_permission())
+            # 悬浮窗权限按钮
+            overlay_btn = Button(
+                text='开启悬浮窗权限',
+                size_hint=(1, 1),
+                background_color=[0.3, 0.6, 1, 1],
+                background_normal=''
+            )
+            overlay_btn.bind(on_press=lambda x: self.permission_manager.open_overlay_permission_settings() if self.permission_manager else None)
             
-            accessibility_btn = Button(text='Enable Accessibility Service', size_hint=(1, 0.5))
-            accessibility_btn.bind(on_press=lambda x: self.android_utils.request_accessibility_service())
+            # 无障碍服务按钮
+            accessibility_btn = Button(
+                text='开启无障碍服务',
+                size_hint=(1, 1),
+                background_color=[1, 0.4, 0.4, 1],
+                background_normal=''
+            )
+            accessibility_btn.bind(on_press=lambda x: self.permission_manager.open_accessibility_settings() if self.permission_manager else None)
             
             btn_layout.add_widget(overlay_btn)
             btn_layout.add_widget(accessibility_btn)
             content.add_widget(btn_layout)
+            
+            # 刷新按钮
+            refresh_btn = Button(
+                text='🔄 刷新权限状态',
+                size_hint=(1, 0.2),
+                background_color=[0.4, 0.8, 0.4, 1],
+                background_normal=''
+            )
+            
+            def refresh_permissions(x):
+                if self.permission_manager:
+                    self.permission_manager.refresh_permissions()
+                    status_label.text = f'[size=14]{self.permission_manager.get_permission_status_text()}[/size]'
+            
+            refresh_btn.bind(on_press=refresh_permissions)
+            content.add_widget(refresh_btn)
+            
         else:
             # Desktop environment
             content.add_widget(Label(
-                text='Desktop environment, no special permissions needed',
+                text='桌面环境，无需特殊权限',
                 size_hint=(1, 0.6)
             ))
         
         # Close button
-        close_btn = Button(text='Close', size_hint=(1, 0.2))
+        close_btn = Button(
+            text='关闭',
+            size_hint=(1, 0.15),
+            background_color=[0.6, 0.6, 0.6, 1],
+            background_normal=''
+        )
         content.add_widget(close_btn)
         
         popup = Popup(
-            title='Permissions',
+            title='权限管理',
             content=content,
-            size_hint=(0.9, 0.8)
+            size_hint=(0.9, 0.7)
         )
         
         close_btn.bind(on_press=popup.dismiss)
