@@ -1,6 +1,6 @@
 """
-Honkai Star Rail Automation Assistant - Mobile Version
-Based on Kivy framework for Android applications
+崩坏：星穹铁道自动化助手 - 移动版
+基于 Kivy 框架的 Android 应用
 """
 
 import os
@@ -18,6 +18,18 @@ from kivy.graphics import Color, Rectangle
 from kivy.clock import Clock
 from kivy.logger import Logger
 from kivy.utils import platform
+from kivy.core.text import LabelBase
+
+# 配置中文字体支持
+try:
+    if platform == 'android':
+        # Android上使用系统默认字体支持中文
+        LabelBase.register(name='Roboto', fn_regular='/system/fonts/DroidSansFallback.ttf')
+    else:
+        # Windows上使用微软雅黑
+        LabelBase.register(name='Roboto', fn_regular='C:/Windows/Fonts/msyh.ttc')
+except:
+    Logger.warning("Font: Failed to register custom font, using default")
 
 # Import core modules
 from automation_engine import AutomationEngine
@@ -66,7 +78,7 @@ class HSRAutomationApp(App):
         
         # Title with enhanced styling for light background
         title_label = Label(
-            text='[size=24][color=2E5BBA]HSR[/color] [color=E67E22]Automation[/color][/size]\n[size=16][color=27AE60]Assistant[/color][/size]',
+            text='[size=24][color=2E5BBA]HSR[/color] [color=E67E22]自动化[/color][/size]\n[size=16][color=27AE60]助手[/color][/size]',
             size_hint=(1, 0.7),
             markup=True,
             halign='center',
@@ -120,7 +132,7 @@ class HSRAutomationApp(App):
         self.daily_commission_checkbox.bind(active=self.on_daily_commission_toggle)
         
         commission_label = Label(
-            text='[size=15][color=2C3E50]Daily Commission[/color][/size]',
+            text='[size=15][color=2C3E50]每日委托[/color][/size]',
             size_hint=(0.85, 1),
             markup=True,
             halign='left',
@@ -150,7 +162,7 @@ class HSRAutomationApp(App):
         )
         
         self.start_btn = Button(
-            text='[size=16]START[/size]',
+            text='[size=16]开始[/size]',
             size_hint=(0.5, 1),
             markup=True,
             background_color=[0.29, 0.78, 0.29, 1],  # Modern green
@@ -160,7 +172,7 @@ class HSRAutomationApp(App):
         self.start_btn.bind(on_press=self.start_automation)
         
         self.stop_btn = Button(
-            text='[size=16]STOP[/size]',
+            text='[size=16]停止[/size]',
             size_hint=(0.5, 1),
             markup=True,
             background_color=[0.85, 0.33, 0.33, 1],  # Modern red
@@ -181,7 +193,7 @@ class HSRAutomationApp(App):
         )
         
         perm_btn = Button(
-            text='[size=14]Permissions[/size]',
+            text='[size=14]权限[/size]',
             size_hint=(0.5, 1),
             markup=True,
             background_color=[0.95, 0.65, 0.31, 1],  # Modern orange
@@ -190,7 +202,7 @@ class HSRAutomationApp(App):
         perm_btn.bind(on_press=self.show_permissions)
         
         about_btn = Button(
-            text='[size=14]About[/size]',
+            text='[size=14]关于[/size]',
             size_hint=(0.5, 1),
             markup=True,
             background_color=[0.44, 0.56, 0.89, 1],  # Modern blue
