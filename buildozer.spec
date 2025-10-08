@@ -23,7 +23,7 @@ version = 1.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,numpy,pillow,pyyaml,pyjnius
+requirements = python3,kivy,pillow,pyjnius,numpy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -42,7 +42,7 @@ orientation = portrait
 fullscreen = 0
 
 # (int) Target Android API, should be as high as possible.
-android.api = 33
+android.api = 31
 
 # (int) Minimum API your APK will support.
 android.minapi = 21
@@ -50,8 +50,8 @@ android.minapi = 21
 # (str) Android NDK version to use
 android.ndk = 25b
 
-# (str) Android SDK version to use
-android.sdk = 33
+# (str) Android SDK version to use  
+android.sdk = 31
 
 # (list) Android application meta-data to set (key=value format)
 #android.meta_data = 
