@@ -349,9 +349,10 @@ class HSRAutomationApp(App):
         if self.is_running:
             return
         
-        # Check permissions
+        # Check permissions (只需存储权限)
         if platform == 'android' and not self.android_utils.check_permissions():
-            self.update_status("Permissions required")
+            self.update_status("需要存储权限，请在权限页面允许")
+            Logger.warning("存储权限未授予")
             return
         
         Logger.info("Starting automation tasks")
@@ -474,35 +475,23 @@ class HSRAutomationApp(App):
             status_label.bind(size=status_label.setter('text_size'))
             content.add_widget(status_label)
             
-            # Permission setting buttons
-            btn_layout = BoxLayout(orientation='vertical', size_hint=(1, 0.4), spacing=8)
-            
-            # 悬浮窗权限按钮
-            overlay_btn = Button(
-                text='开启悬浮窗权限',
-                size_hint=(1, 1),
-                background_color=[0.3, 0.6, 1, 1],
-                background_normal=''
+            # 说明文字
+            info_label = Label(
+                text='[size=14][b]本应用使用Runtime.exec方式[/b]\n'
+                     '无需悬浮窗和无障碍服务权限\n\n'
+                     '[color=27AE60]只需存储权限即可运行[/color][/size]',
+                size_hint=(1, 0.3),
+                markup=True,
+                halign='center',
+                valign='middle'
             )
-            overlay_btn.bind(on_press=lambda x: self.permission_manager.open_overlay_permission_settings() if self.permission_manager else None)
-            
-            # 无障碍服务按钮
-            accessibility_btn = Button(
-                text='开启无障碍服务',
-                size_hint=(1, 1),
-                background_color=[1, 0.4, 0.4, 1],
-                background_normal=''
-            )
-            accessibility_btn.bind(on_press=lambda x: self.permission_manager.open_accessibility_settings() if self.permission_manager else None)
-            
-            btn_layout.add_widget(overlay_btn)
-            btn_layout.add_widget(accessibility_btn)
-            content.add_widget(btn_layout)
+            info_label.bind(size=info_label.setter('text_size'))
+            content.add_widget(info_label)
             
             # 刷新按钮
             refresh_btn = Button(
                 text='🔄 刷新权限状态',
-                size_hint=(1, 0.2),
+                size_hint=(1, 0.15),
                 background_color=[0.4, 0.8, 0.4, 1],
                 background_normal=''
             )

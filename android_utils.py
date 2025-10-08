@@ -45,24 +45,22 @@ class AndroidUtils:
             self.is_android = False
     
     def check_permissions(self):
-        """检查所有必要权限"""
+        """检查所有必要权限 - 使用Runtime.exec方案，只需存储权限"""
         if not self.is_android:
             return True
         
         try:
-            # 检查悬浮窗权限
-            self.permissions['overlay'] = self.check_overlay_permission()
-            
-            # 检查无障碍服务
-            self.permissions['accessibility'] = self.check_accessibility_service()
-            
-            # 检查存储权限
+            # 只检查存储权限
             self.permissions['storage'] = self.check_storage_permission()
             
-            Logger.info(f"权限检查结果: {self.permissions}")
+            # Runtime.exec方案不需要悬浮窗和无障碍服务
+            self.permissions['overlay'] = True
+            self.permissions['accessibility'] = True
             
-            # 返回是否所有权限都已获得
-            return all(self.permissions.values())
+            Logger.info(f"权限检查结果: 存储={self.permissions['storage']}")
+            
+            # 只要有存储权限就可以运行
+            return self.permissions['storage']
             
         except Exception as e:
             Logger.error(f"权限检查失败: {e}")

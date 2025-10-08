@@ -352,9 +352,16 @@ class PermissionManager:
     
     def all_permissions_granted(self):
         """检查是否所有权限都已授予"""
-        # 使用Instrumentation方案，只需要存储权限
+        # 使用Runtime.exec方案，只需要存储权限
         required = ['storage']
-        return all(self.permissions.get(p, False) for p in required)
+        granted = all(self.permissions.get(p, False) for p in required)
+        
+        if not granted:
+            Logger.warning("存储权限未授予")
+        else:
+            Logger.info("✅ 所有必需权限已授予")
+        
+        return granted
     
     def get_permission_status_text(self):
         """获取权限状态文本"""
