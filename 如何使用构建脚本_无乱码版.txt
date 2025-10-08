@@ -1,0 +1,177 @@
+========================================
+HSR Automation - Build Instructions
+========================================
+
+Problem: Chinese characters show as garbled text in command window
+
+Solution: Use English version scripts!
+
+========================================
+Quick Start (3 Steps)
+========================================
+
+Step 1: Check Environment
+-------------------------
+Double-click: check_docker_en.bat
+
+Expected output:
+  [OK] Docker is installed
+  [OK] Docker is running
+  [OK] All checks passed!
+
+If you see errors:
+  [X] Docker is NOT installed
+    -> Install Docker Desktop from:
+       https://www.docker.com/products/docker-desktop
+  
+  [X] Docker is NOT running
+    -> Start Docker Desktop and wait for it to fully start
+
+
+Step 2: Build APK
+-----------------
+Double-click: build_android_en.bat
+
+This will:
+  - Build Docker image (first time only, ~5 minutes)
+  - Download Android SDK/NDK (first time only, ~30-60 minutes)
+  - Build your APK
+
+Window will stay open and show progress.
+Do NOT close the window!
+
+
+Step 3: Install APK
+-------------------
+After build completes:
+
+  adb install bin\hsrautomation-1.0-arm64-v8a-debug.apk
+
+
+========================================
+File Guide
+========================================
+
+English Version (NO garbled text):
+  check_docker_en.bat          - Check environment
+  build_android_en.bat         - Build APK
+
+Original Version (may have garbled Chinese):
+  check_docker.bat
+  build_android_docker_fixed.bat
+
+
+========================================
+Common Issues
+========================================
+
+Issue 1: Window closes immediately
+-----------------------------------
+Cause: Docker not installed or not running
+
+Solution:
+  1. Run check_docker_en.bat to diagnose
+  2. Follow the instructions shown
+
+
+Issue 2: Build fails
+---------------------
+Cause: Various (network, config, etc.)
+
+Solution:
+  1. Check the error message
+  2. Look at the log file: build_log_*.txt
+  3. See BUILD_ANDROID_GUIDE.md for details
+
+
+Issue 3: Path with Chinese characters
+--------------------------------------
+If your project path contains Chinese (like D:\插件):
+
+Option A: Move to English path
+  Move project to: D:\hsr-automation
+
+Option B: Use short path
+  For /d %i in ("D:\插件") do @echo %~si
+  Use the output path in scripts
+
+
+========================================
+Requirements
+========================================
+
+Before building:
+  1. Docker Desktop installed and running
+  2. At least 5GB free disk space
+  3. Stable internet connection
+  4. Project files (main.py, buildozer.spec, etc.)
+
+
+========================================
+Build Process
+========================================
+
+Normal flow:
+  1. Check Docker (2 seconds)
+  2. Build Docker image (5 minutes, first time only)
+  3. Build APK (30-60 minutes, first time only)
+  4. Find APK in bin/ folder
+
+Subsequent builds:
+  - Much faster (5-10 minutes)
+  - SDK/NDK already downloaded
+
+
+========================================
+Success Indicators
+========================================
+
+You know it's working when you see:
+  [SUCCESS] Docker is installed
+  [SUCCESS] Docker is running
+  [STEP 1/3] Building Docker image
+  [STEP 2/3] Building APK
+  [SUCCESS] Build Complete!
+
+Final output:
+  [APK FILE] D:\...\bin\hsrautomation-1.0-arm64-v8a-debug.apk
+
+
+========================================
+Quick Reference
+========================================
+
+Check environment:
+  check_docker_en.bat
+
+Build debug version:
+  build_android_en.bat
+  OR
+  build_android_en.bat debug
+
+Build release version:
+  build_android_en.bat release
+
+Clean build files:
+  build_android_en.bat clean
+
+
+========================================
+Getting Help
+========================================
+
+If problems persist:
+  1. Check log file: build_log_*.txt
+  2. Read: BUILD_ANDROID_GUIDE.md
+  3. Read: 构建问题排查指南.md
+  4. Check Docker status: docker info
+
+
+========================================
+Last Updated: 2025-10-06
+Version: 1.0
+========================================
+
+
+
+

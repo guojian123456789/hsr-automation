@@ -1,0 +1,23 @@
+# 崩坏星穹铁道自动化助手依赖包
+
+# 核心框架
+kivy>=2.3.0
+numpy>=1.24.0
+pillow>=10.0.0
+
+# 图像处理
+opencv-python>=4.8.0
+
+# 配置管理
+pyyaml>=6.0.0
+
+# 桌面自动化（开发环境）
+pyautogui>=0.9.54
+
+# Android构建工具
+buildozer>=1.5.0
+python-for-android>=2024.1.0
+
+# 可选依赖（用于增强功能）
+# loguru>=0.7.0  # 日志系统
+# requests>=2.31.0  # 网络请求
