@@ -5,9 +5,8 @@
     android:accessibilityFlags="flagDefault|flagReportViewIds|flagRequestTouchExplorationMode"
     android:canPerformGestures="true"
     android:canRetrieveWindowContent="true"
-    android:description="@string/accessibility_service_description"
+    android:description="HSR自动化助手 - 用于游戏自动化操作"
     android:notificationTimeout="100"
-    android:packageNames="com.miHoYo.hkrpg"
     android:settingsActivity="com.hsr.automation.MainActivity" />
 
 

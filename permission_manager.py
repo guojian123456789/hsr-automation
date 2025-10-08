@@ -144,9 +144,14 @@ class PermissionManager:
             return True
         
         try:
-            # 检查无障碍服务是否启用
-            # 这个需要通过系统设置检查
-            return False  # 暂时返回False，引导用户手动开启
+            from android_accessibility_service import AndroidAccessibilityService
+            
+            accessibility_service = AndroidAccessibilityService()
+            is_enabled = accessibility_service.is_service_enabled()
+            
+            Logger.info(f"无障碍服务状态: {'已启用' if is_enabled else '未启用'}")
+            return is_enabled
+            
         except Exception as e:
             Logger.error(f"检查无障碍服务失败: {e}")
             return False
@@ -278,37 +283,65 @@ class PermissionManager:
     def open_overlay_permission_settings(self):
         """打开悬浮窗权限设置页面"""
         if not self.is_android:
+            Logger.warning("非Android环境，无法打开悬浮窗权限设置")
             return
         
         try:
             Logger.info("打开悬浮窗权限设置...")
             
+            current_activity = self.PythonActivity.mActivity
+            if current_activity is None:
+                Logger.error("无法获取当前Activity")
+                return
+            
+            # Android 6.0+ (API 23+) 需要特殊权限
             if self.Build.VERSION.SDK_INT >= 23:
-                intent = self.Intent(
-                    self.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    self.Uri.parse(f"package:{self.PythonActivity.mActivity.getPackageName()}")
-                )
-                self.PythonActivity.mActivity.startActivity(intent)
+                package_name = current_activity.getPackageName()
+                Logger.info(f"应用包名: {package_name}")
+                
+                intent = self.Intent(self.Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                intent.setData(self.Uri.parse(f"package:{package_name}"))
+                
+                # 添加FLAG_ACTIVITY_NEW_TASK标志
+                intent.addFlags(0x10000000)  # Intent.FLAG_ACTIVITY_NEW_TASK
+                
+                current_activity.startActivity(intent)
                 Logger.info("✅ 已打开悬浮窗权限设置")
+            else:
+                Logger.info("Android版本低于6.0，无需悬浮窗权限")
             
         except Exception as e:
             Logger.error(f"打开悬浮窗权限设置失败: {e}")
+            import traceback
+            Logger.error(traceback.format_exc())
     
     def open_accessibility_settings(self):
         """打开无障碍服务设置页面"""
         if not self.is_android:
+            Logger.warning("非Android环境，无法打开无障碍服务设置")
             return
         
         try:
             Logger.info("打开无障碍服务设置...")
             
+            current_activity = self.PythonActivity.mActivity
+            if current_activity is None:
+                Logger.error("无法获取当前Activity")
+                return
+            
             intent = self.Intent(self.Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            self.PythonActivity.mActivity.startActivity(intent)
+            
+            # 添加FLAG_ACTIVITY_NEW_TASK标志
+            intent.addFlags(0x10000000)  # Intent.FLAG_ACTIVITY_NEW_TASK
+            
+            current_activity.startActivity(intent)
             
             Logger.info("✅ 已打开无障碍服务设置")
             
         except Exception as e:
             Logger.error(f"打开无障碍服务设置失败: {e}")
+            import traceback
+            Logger.error(traceback.format_exc())
     
     def request_media_projection(self):
         """请求截图权限（MediaProjection）"""
@@ -353,15 +386,33 @@ class PermissionManager:
     def refresh_permissions(self):
         """刷新权限状态"""
         if not self.is_android:
+            Logger.info("桌面环境，无需刷新权限")
             return
         
-        Logger.info("刷新权限状态...")
+        Logger.info("🔄 开始刷新权限状态...")
         
-        # 检查悬浮窗
-        self.permissions['overlay'] = self._check_overlay_permission()
+        # 检查存储权限
+        try:
+            storage_granted = (
+                self.check_permission(self.Permission.WRITE_EXTERNAL_STORAGE) and
+                self.check_permission(self.Permission.READ_EXTERNAL_STORAGE)
+            )
+            self.permissions['storage'] = storage_granted
+            Logger.info(f"存储权限: {'✅' if storage_granted else '❌'}")
+        except Exception as e:
+            Logger.error(f"检查存储权限失败: {e}")
         
-        # 检查无障碍（需要用户手动验证）
-        # self.permissions['accessibility'] = self._check_accessibility_service()
+        # 检查悬浮窗权限
+        overlay_granted = self._check_overlay_permission()
+        self.permissions['overlay'] = overlay_granted
+        Logger.info(f"悬浮窗权限: {'✅' if overlay_granted else '❌'}")
         
-        Logger.info(f"权限状态: {self.permissions}")
+        # 检查无障碍服务
+        accessibility_enabled = self._check_accessibility_service()
+        self.permissions['accessibility'] = accessibility_enabled
+        Logger.info(f"无障碍服务: {'✅' if accessibility_enabled else '❌'}")
+        
+        Logger.info(f"✅ 权限状态刷新完成: {self.permissions}")
+        
+        return self.permissions
 
