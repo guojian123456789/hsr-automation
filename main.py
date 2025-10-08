@@ -21,15 +21,23 @@ from kivy.utils import platform
 from kivy.core.text import LabelBase
 
 # 配置中文字体支持
+import os
 try:
     if platform == 'android':
-        # Android上使用系统默认字体支持中文
-        LabelBase.register(name='Roboto', fn_regular='/system/fonts/DroidSansFallback.ttf')
+        # Android上使用打包的中文字体
+        font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'msyh.ttc')
+        LabelBase.register(name='Roboto', fn_regular=font_path)
+        Logger.info(f"Font: Successfully registered bundled Chinese font")
     else:
-        # Windows上使用微软雅黑
-        LabelBase.register(name='Roboto', fn_regular='C:/Windows/Fonts/msyh.ttc')
-except:
-    Logger.warning("Font: Failed to register custom font, using default")
+        # Windows上使用打包的字体或系统字体
+        bundled_font = os.path.join(os.path.dirname(__file__), 'fonts', 'msyh.ttc')
+        if os.path.exists(bundled_font):
+            LabelBase.register(name='Roboto', fn_regular=bundled_font)
+        else:
+            LabelBase.register(name='Roboto', fn_regular='C:/Windows/Fonts/msyh.ttc')
+        Logger.info("Font: Successfully registered Chinese font for Windows")
+except Exception as e:
+    Logger.warning(f"Font: Failed to register custom font: {e}")
 
 # Import core modules
 from automation_engine import AutomationEngine

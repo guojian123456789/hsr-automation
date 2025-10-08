@@ -13,10 +13,10 @@ package.domain = com.hsr.automation
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,txt,yaml,json
+source.include_exts = py,png,jpg,kv,atlas,txt,yaml,json,ttc
 
 # (list) List of inclusions using pattern matching
-#source.include_patterns = assets/*,images/*.png
+source.include_patterns = fonts/*.ttc,service/*.java,service/*.xml
 
 # (str) Application versioning (method 1)
 version = 1.0
