@@ -156,6 +156,68 @@ class AndroidScreenCapture:
             Logger.error(f"开始截图失败: {e}")
             return False
     
+    def capture_screen_shell(self):
+        """
+        使用shell命令截图（无需MediaProjection权限）
+        
+        返回:
+            numpy array: BGR格式的图像数据，与OpenCV兼容
+        """
+        if not self.is_android:
+            return None
+        
+        try:
+            import subprocess
+            import os
+            from PIL import Image
+            import io
+            
+            # 使用screencap命令截图到临时文件
+            screenshot_path = "/sdcard/screenshot_temp.png"
+            
+            # 执行截图命令
+            result = subprocess.run(
+                ["screencap", "-p", screenshot_path],
+                capture_output=True,
+                timeout=2
+            )
+            
+            if result.returncode != 0:
+                Logger.warning("screencap命令执行失败")
+                return None
+            
+            # 读取截图文件
+            if os.path.exists(screenshot_path):
+                # 使用PIL读取图片
+                image = Image.open(screenshot_path)
+                
+                # 转换为numpy数组（如果可用）
+                if NUMPY_AVAILABLE:
+                    import numpy as np
+                    # PIL Image转numpy，然后转BGR格式（OpenCV格式）
+                    img_array = np.array(image)
+                    if len(img_array.shape) == 3:
+                        # RGB转BGR
+                        img_array = img_array[:, :, ::-1]
+                    
+                    # 删除临时文件
+                    try:
+                        os.remove(screenshot_path)
+                    except:
+                        pass
+                    
+                    return img_array
+                else:
+                    # 没有NumPy，返回PIL Image
+                    return image
+            else:
+                Logger.warning(f"截图文件不存在: {screenshot_path}")
+                return None
+                
+        except Exception as e:
+            Logger.error(f"Shell截图失败: {e}")
+            return None
+    
     def capture_screen(self):
         """
         截取当前屏幕
@@ -164,8 +226,16 @@ class AndroidScreenCapture:
             numpy array: BGR格式的图像数据，与OpenCV兼容
         """
         if not self.is_android:
-            Logger.warning("非Android环境，无法使用MediaProjection截图")
+            Logger.warning("非Android环境，无法截图")
             return None
+        
+        # 优先使用shell命令截图（无需权限）
+        screenshot = self.capture_screen_shell()
+        if screenshot is not None:
+            return screenshot
+        
+        # 如果shell方法失败，尝试MediaProjection方法
+        Logger.info("Shell截图失败，尝试MediaProjection方法...")
         
         if not self.permission_granted:
             Logger.warning("屏幕录制权限未授予")
