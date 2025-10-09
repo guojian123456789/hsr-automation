@@ -1,6 +1,6 @@
 [app]
 
-# Build version: 1.0.6-fix-screencap-path
+# Build version: 1.0.7-enable-opencv
 # Last updated: 2025-10-09
 
 # (str) Title of your application
@@ -26,7 +26,7 @@ version = 1.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,pillow
+requirements = python3,kivy,numpy,opencv
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -106,3 +106,6 @@ warn_on_root = 1
 
 # (str) Path to build output (i.e. .apk, .aar, .aab) storage
 # bin_dir = ./bin
+
+# p4a specific options for OpenCV
+p4a.bootstrap = sdl2
