@@ -17,6 +17,8 @@ from android_screen_capture import AndroidScreenCapture
 class AutomationEngine:
     """自动化引擎主类"""
     
+    VERSION = "1.0.1-fix-screen-capture"  # 版本标记
+    
     def __init__(self):
         self.is_running = False
         self.current_task = None
@@ -31,10 +33,11 @@ class AutomationEngine:
         # 初始化截图模块（Android专用）
         if platform == 'android':
             self.screen_capture = AndroidScreenCapture()
+            Logger.info(f"✅ AndroidScreenCapture 已初始化")
         else:
             self.screen_capture = None
         
-        Logger.info(f"自动化引擎初始化完成，平台: {self.platform}")
+        Logger.info(f"🚀 自动化引擎初始化完成 [版本: {self.VERSION}]，平台: {self.platform}")
     
     def set_daily_commission_enabled(self, enabled):
         """设置每日委托是否启用"""
