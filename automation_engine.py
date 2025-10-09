@@ -12,6 +12,7 @@ from kivy.utils import platform
 from image_processor import ImageProcessor
 from game_controller import GameController
 from task_manager import TaskManager
+from android_screen_capture import AndroidScreenCapture
 
 class AutomationEngine:
     """自动化引擎主类"""
@@ -26,6 +27,12 @@ class AutomationEngine:
         self.image_processor = ImageProcessor()
         self.game_controller = GameController()
         self.task_manager = TaskManager()
+        
+        # 初始化截图模块（Android专用）
+        if platform == 'android':
+            self.screen_capture = AndroidScreenCapture()
+        else:
+            self.screen_capture = None
         
         Logger.info(f"自动化引擎初始化完成，平台: {self.platform}")
     
@@ -116,7 +123,7 @@ class AutomationEngine:
             if check_count % 5 == 0:  # 每5秒打印一次
                 Logger.info(f"持续检测中... ({check_count}秒)")
             
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.warning("⚠️ 无法截图，1秒后重试")
                 time.sleep(1)
@@ -161,7 +168,7 @@ class AutomationEngine:
             if not self.is_running:
                 return False
             
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.warning("无法获取屏幕截图，1秒后重试")
                 time.sleep(1)
@@ -192,7 +199,7 @@ class AutomationEngine:
                         Logger.info("🔍 第三阶段：智能检测登录奖励(yueka)或主界面(task)...")
                         
                         yueka_handled = False
-                        check_screenshot = self.image_processor.capture_screen()
+                        check_screenshot = self.screen_capture.capture_screen()
                         
                         if check_screenshot is not None:
                             # 同时检测 yueka 和 task，比较置信度
@@ -237,7 +244,7 @@ class AutomationEngine:
                             if not self.is_running:
                                 return False
                             
-                            check_screenshot = self.image_processor.capture_screen()
+                            check_screenshot = self.screen_capture.capture_screen()
                             if check_screenshot is not None:
                                 task_result = self.image_processor.find_image(check_screenshot, 'task')
                                 if task_result:
@@ -275,7 +282,7 @@ class AutomationEngine:
                 return False
             
             # 截取屏幕
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 time.sleep(1)
                 continue
@@ -308,7 +315,7 @@ class AutomationEngine:
             if not self.is_running:
                 return False
             
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.warning("无法获取屏幕截图，1秒后重试")
                 time.sleep(1)
@@ -343,7 +350,7 @@ class AutomationEngine:
             if not self.is_running:
                 return False
             
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.warning("无法获取屏幕截图，1秒后重试")
                 time.sleep(1)
@@ -385,7 +392,7 @@ class AutomationEngine:
         Logger.info("🔍 第六步：检查paiqianzhong或lingqu状态")
         
         # 获取当前屏幕截图
-        screenshot = self.image_processor.capture_screen()
+        screenshot = self.screen_capture.capture_screen()
         if screenshot is None:
             Logger.error("❌ 无法获取屏幕截图")
             return False
@@ -434,7 +441,7 @@ class AutomationEngine:
                 
                 # 第三步：点击zaicipaiqian
                 Logger.info("🎯 第三步：点击zaicipaiqian按钮")
-                screenshot2 = self.image_processor.capture_screen()
+                screenshot2 = self.screen_capture.capture_screen()
                 if screenshot2 is not None:
                     zaici_result = self.image_processor.find_image(screenshot2, 'zaicipaiqian')
                     if zaici_result:
@@ -449,7 +456,7 @@ class AutomationEngine:
                             
                             # 第四步：点击close
                             Logger.info("🎯 第四步：点击close按钮")
-                            screenshot3 = self.image_processor.capture_screen()
+                            screenshot3 = self.screen_capture.capture_screen()
                             if screenshot3 is not None:
                                 close_result = self.image_processor.find_image(screenshot3, 'close')
                                 if close_result:
@@ -494,7 +501,7 @@ class AutomationEngine:
         Logger.info("🔍 开始120kaituoli流程")
         
         # 获取当前屏幕截图
-        screenshot = self.image_processor.capture_screen()
+        screenshot = self.screen_capture.capture_screen()
         if screenshot is None:
             Logger.error("❌ 无法获取屏幕截图")
             return False
@@ -539,7 +546,7 @@ class AutomationEngine:
         
         # 第二步：点击jinru
         Logger.info("🔍 第二步：搜索并点击jinru按钮")
-        screenshot = self.image_processor.capture_screen()
+        screenshot = self.screen_capture.capture_screen()
         if screenshot is None:
             Logger.error("❌ 无法获取屏幕截图")
             return False
@@ -564,7 +571,7 @@ class AutomationEngine:
         # 第四步：点击jiahao五次
         Logger.info("🔍 第四步：搜索并点击jiahao按钮5次")
         for i in range(5):
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.error(f"❌ 第{i+1}次无法获取屏幕截图")
                 return False
@@ -589,7 +596,7 @@ class AutomationEngine:
         
         # 第六步：点击tiaozhan
         Logger.info("🔍 第六步：搜索并点击tiaozhan按钮")
-        screenshot = self.image_processor.capture_screen()
+        screenshot = self.screen_capture.capture_screen()
         if screenshot is None:
             Logger.error("❌ 无法获取屏幕截图")
             return False
@@ -613,7 +620,7 @@ class AutomationEngine:
         
         # 第八步：点击kaishitiaozhan
         Logger.info("🔍 第八步：搜索并点击kaishitiaozhan按钮")
-        screenshot = self.image_processor.capture_screen()
+        screenshot = self.screen_capture.capture_screen()
         if screenshot is None:
             Logger.error("❌ 无法获取屏幕截图")
             return False
@@ -651,7 +658,7 @@ class AutomationEngine:
             Logger.info(f"🔍 第{attempt}次检测倍速状态")
             
             # 获取当前屏幕截图
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.error("❌ 无法获取屏幕截图")
                 return False
@@ -684,7 +691,7 @@ class AutomationEngine:
                         time.sleep(1)  # 等待界面响应
                         
                         # 检查是否成功切换
-                        check_screenshot = self.image_processor.capture_screen()
+                        check_screenshot = self.screen_capture.capture_screen()
                         if check_screenshot is not None:
                             check_beisukai = self.image_processor.find_image(check_screenshot, 'beisukai')
                             check_beisuguan = self.image_processor.find_image(check_screenshot, 'beisuguan')
@@ -726,7 +733,7 @@ class AutomationEngine:
             Logger.info(f"🔍 第{attempt}次检测自动功能状态")
             
             # 获取当前屏幕截图
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.error("❌ 无法获取屏幕截图")
                 return False
@@ -759,7 +766,7 @@ class AutomationEngine:
                         time.sleep(1)  # 等待界面响应
                         
                         # 检查是否成功切换
-                        check_screenshot = self.image_processor.capture_screen()
+                        check_screenshot = self.screen_capture.capture_screen()
                         if check_screenshot is not None:
                             check_zidongkai = self.image_processor.find_image(check_screenshot, 'zidongkai')
                             check_zidongguan = self.image_processor.find_image(check_screenshot, 'zidongguan')
@@ -803,7 +810,7 @@ class AutomationEngine:
                 Logger.info(f"🔍 已检测zailaiyici {check_count}次，继续等待...")
             
             # 获取屏幕截图
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.warning("⚠️ 无法获取屏幕截图，等待1秒后重试")
                 time.sleep(1)
@@ -845,7 +852,7 @@ class AutomationEngine:
                 Logger.info(f"🔍 已检测tuichuguanqia {check_count}次，继续等待...")
             
             # 获取屏幕截图
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.warning("⚠️ 无法获取屏幕截图，等待1秒后重试")
                 time.sleep(1)
@@ -891,7 +898,7 @@ class AutomationEngine:
                 Logger.info(f"🔍 已检测close {check_count}次，继续等待...")
             
             # 获取屏幕截图
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.warning("⚠️ 无法获取屏幕截图，等待1秒后重试")
                 time.sleep(1)
@@ -923,7 +930,7 @@ class AutomationEngine:
         time.sleep(1)
         
         Logger.info("🔍 阶段2：搜索并点击task按钮")
-        screenshot = self.image_processor.capture_screen()
+        screenshot = self.screen_capture.capture_screen()
         if screenshot is None:
             Logger.error("❌ 无法获取屏幕截图")
             return False
@@ -950,7 +957,7 @@ class AutomationEngine:
         
         while True:
             # 获取屏幕截图
-            screenshot = self.image_processor.capture_screen()
+            screenshot = self.screen_capture.capture_screen()
             if screenshot is None:
                 Logger.warning("⚠️ 无法获取屏幕截图，等待1秒后重试")
                 time.sleep(1)
@@ -984,7 +991,7 @@ class AutomationEngine:
         Logger.info("🎁 开始执行礼物检查流程")
         
         # 获取屏幕截图
-        screenshot = self.image_processor.capture_screen()
+        screenshot = self.screen_capture.capture_screen()
         if screenshot is None:
             Logger.error("❌ 无法获取屏幕截图")
             return False
@@ -1039,7 +1046,7 @@ class AutomationEngine:
             
             # 点击close
             Logger.info("🔍 搜索并点击close按钮...")
-            close_screenshot = self.image_processor.capture_screen()
+            close_screenshot = self.screen_capture.capture_screen()
             if close_screenshot is None:
                 Logger.error("❌ 无法获取屏幕截图")
                 return False
