@@ -73,7 +73,7 @@ android.copy_libs = 1
 android.arch = arm64-v8a
 
 # (list) Permissions
-android.permissions = SYSTEM_ALERT_WINDOW,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK
+android.permissions = SYSTEM_ALERT_WINDOW,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK,QUERY_ALL_PACKAGES
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing
