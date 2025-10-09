@@ -1,5 +1,8 @@
 [app]
 
+# Build version: 1.0.2-fix-apk-build
+# Last updated: 2025-10-09
+
 # (str) Title of your application
 title = HSR Automation
 
@@ -73,7 +76,7 @@ android.copy_libs = 1
 android.arch = arm64-v8a
 
 # (list) Permissions
-android.permissions = SYSTEM_ALERT_WINDOW,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK,QUERY_ALL_PACKAGES
+android.permissions = SYSTEM_ALERT_WINDOW,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,INTERNET,ACCESS_NETWORK_STATE,WAKE_LOCK
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing

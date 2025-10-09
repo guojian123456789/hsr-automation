@@ -48,6 +48,8 @@ from game_launcher import GameLauncher, GamePackageNames
 class HSRAutomationApp(App):
     """Honkai Star Rail Automation Application"""
     
+    APP_VERSION = "1.0.2-fix-apk-build"  # 应用版本标记
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.automation = None
@@ -57,6 +59,8 @@ class HSRAutomationApp(App):
         self.is_running = False
         self.status_text = "Ready"
         self.daily_commission_enabled = True  # Default enabled
+        
+        Logger.info(f"📱 HSRAutomationApp 启动 [版本: {self.APP_VERSION}]")
         
     def build(self):
         """Build application interface"""
@@ -365,16 +369,8 @@ class HSRAutomationApp(App):
             Logger.warning("存储权限未授予")
             return
         
-        # 请求截图权限（如果还没有）
-        if platform == 'android' and hasattr(self, 'automation') and self.automation:
-            if not self.automation.image_processor.screen_capture.permission_granted:
-                Logger.info("🖼️ 请求截图权限...")
-                self.update_status("请求截图权限...")
-                self.automation.image_processor.screen_capture.request_permission()
-                # 等待用户授权（这里会弹出系统对话框）
-                Clock.schedule_once(lambda dt: self._continue_automation(), 2.0)
-                return
-        
+        # 现在使用shell命令截图，不需要MediaProjection权限
+        # 直接继续执行
         self._continue_automation()
     
     def _continue_automation(self):

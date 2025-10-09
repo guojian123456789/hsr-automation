@@ -17,7 +17,7 @@ from android_screen_capture import AndroidScreenCapture
 class AutomationEngine:
     """自动化引擎主类"""
     
-    VERSION = "1.0.1-fix-screen-capture"  # 版本标记
+    VERSION = "1.0.2-fix-apk-build"  # 版本标记
     
     def __init__(self):
         self.is_running = False
