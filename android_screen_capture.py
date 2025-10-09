@@ -175,17 +175,21 @@ class AndroidScreenCapture:
             Runtime = autoclass('java.lang.Runtime')
             File = autoclass('java.io.File')
             
-            # 使用应用私有目录（避免权限问题）
-            context = self.activity.getApplicationContext()
-            cache_dir = context.getCacheDir().getAbsolutePath()
-            screenshot_path = f"{cache_dir}/screenshot_temp.png"
+            # 使用外部存储目录（screencap需要）
+            Environment = autoclass('android.os.Environment')
+            external_storage = Environment.getExternalStorageDirectory().getAbsolutePath()
+            screenshot_path = f"{external_storage}/screenshot_temp.png"
             
             Logger.info(f"📸 截图路径: {screenshot_path}")
             
-            # 执行screencap命令
+            # 执行screencap命令（通过sh执行）
             runtime = Runtime.getRuntime()
-            cmd = f"screencap -p {screenshot_path}"
-            process = runtime.exec(cmd)
+            # 使用sh -c 执行完整命令
+            cmd = ["sh", "-c", f"screencap -p {screenshot_path}"]
+            # 转换Python列表为Java String数组
+            String = autoclass('java.lang.String')
+            cmd_java = [String(c) for c in cmd]
+            process = runtime.exec(cmd_java)
             
             # 等待命令执行完成
             exit_code = process.waitFor()

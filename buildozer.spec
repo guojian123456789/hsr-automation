@@ -1,6 +1,6 @@
 [app]
 
-# Build version: 1.0.5-enable-pillow-matching
+# Build version: 1.0.6-fix-screencap-path
 # Last updated: 2025-10-09
 
 # (str) Title of your application
