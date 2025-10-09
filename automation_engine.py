@@ -184,14 +184,55 @@ class AutomationEngine:
                         Logger.info(f"点击成功: {image_name}")
                         detected = True
                         
-                        # 等待进入游戏并持续检测task按钮（无时间限制）
-                        Logger.info("等待游戏加载，开始检测task按钮...")
-                        time.sleep(3)  # 先等待3秒让游戏开始加载
+                        # 等待进入游戏并检测登录奖励或task按钮
+                        Logger.info("等待游戏加载...")
+                        time.sleep(20)  # 等待20秒让游戏充分加载
                         
-                        # 持续检测task按钮作为进入游戏成功的标识（无时间限制）
+                        # 第三阶段：智能检测 yueka（登录奖励）或 task（主界面）
+                        Logger.info("🔍 第三阶段：智能检测登录奖励(yueka)或主界面(task)...")
+                        
+                        yueka_handled = False
+                        check_screenshot = self.image_processor.capture_screen()
+                        
+                        if check_screenshot is not None:
+                            # 同时检测 yueka 和 task，比较置信度
+                            yueka_result = self.image_processor.find_image(check_screenshot, 'yueka')
+                            task_result = self.image_processor.find_image(check_screenshot, 'task')
+                            
+                            yueka_confidence = yueka_result['confidence'] if yueka_result else 0
+                            task_confidence = task_result['confidence'] if task_result else 0
+                            
+                            Logger.info(f"检测结果 - yueka置信度: {yueka_confidence:.2f}, task置信度: {task_confidence:.2f}")
+                            
+                            # 如果检测到 yueka 且置信度更高
+                            if yueka_result and yueka_confidence > task_confidence:
+                                Logger.info("✅ 检测到登录奖励弹窗(yueka)，准备关闭...")
+                                center_x, center_y = yueka_result['center']
+                                
+                                # 第一次点击（领取奖励）
+                                if self.game_controller.click_position((center_x, center_y)):
+                                    Logger.info("✅ 第一次点击成功（领取奖励）")
+                                    time.sleep(1)
+                                    
+                                    # 第二次点击（关闭弹窗）
+                                    if self.game_controller.click_position((center_x, center_y)):
+                                        Logger.info("✅ 第二次点击成功（关闭弹窗）")
+                                        time.sleep(1)
+                                        yueka_handled = True
+                                    else:
+                                        Logger.warning("⚠️ 第二次点击失败")
+                                else:
+                                    Logger.warning("⚠️ 第一次点击失败")
+                            
+                            # 如果检测到 task 且置信度更高（或没有yueka）
+                            elif task_result and task_confidence >= yueka_confidence:
+                                Logger.info("✅ 直接检测到task按钮，登录成功！")
+                                return True
+                        
+                        # 第四阶段：持续检测task按钮（无时间限制）
                         task_check_start = time.time()
                         
-                        Logger.info("🔍 持续检测task按钮（进入游戏成功标识，无时间限制）...")
+                        Logger.info("🔍 第四阶段：持续检测task按钮（进入游戏成功标识，无时间限制）...")
                         while True:  # 无时间限制，持续检测
                             if not self.is_running:
                                 return False

@@ -365,6 +365,23 @@ class HSRAutomationApp(App):
             Logger.warning("存储权限未授予")
             return
         
+        # 请求截图权限（如果还没有）
+        if platform == 'android' and hasattr(self, 'automation') and self.automation:
+            if not self.automation.image_processor.screen_capture.permission_granted:
+                Logger.info("🖼️ 请求截图权限...")
+                self.update_status("请求截图权限...")
+                self.automation.image_processor.screen_capture.request_permission()
+                # 等待用户授权（这里会弹出系统对话框）
+                Clock.schedule_once(lambda dt: self._continue_automation(), 2.0)
+                return
+        
+        self._continue_automation()
+    
+    def _continue_automation(self):
+        """继续执行自动化（在权限授予后）"""
+        if self.is_running:
+            return
+            
         Logger.info("Starting automation tasks")
         self.is_running = True
         self.start_btn.disabled = True
