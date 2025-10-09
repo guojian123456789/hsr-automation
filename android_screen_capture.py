@@ -159,6 +159,7 @@ class AndroidScreenCapture:
     def capture_screen_shell(self):
         """
         使用shell命令截图（无需MediaProjection权限）
+        使用jnius调用Runtime.exec()执行screencap命令
         
         返回:
             numpy array: BGR格式的图像数据，与OpenCV兼容
@@ -167,55 +168,71 @@ class AndroidScreenCapture:
             return None
         
         try:
-            import subprocess
-            import os
+            from jnius import autoclass
             from PIL import Image
-            import io
+            import time
             
-            # 使用screencap命令截图到临时文件
-            screenshot_path = "/sdcard/screenshot_temp.png"
+            # 获取Java类
+            Runtime = autoclass('java.lang.Runtime')
+            File = autoclass('java.io.File')
             
-            # 执行截图命令
-            result = subprocess.run(
-                ["screencap", "-p", screenshot_path],
-                capture_output=True,
-                timeout=2
-            )
+            # 使用应用私有目录（避免权限问题）
+            context = self.activity.getApplicationContext()
+            cache_dir = context.getCacheDir().getAbsolutePath()
+            screenshot_path = f"{cache_dir}/screenshot_temp.png"
             
-            if result.returncode != 0:
-                Logger.warning("screencap命令执行失败")
+            Logger.info(f"截图路径: {screenshot_path}")
+            
+            # 执行screencap命令
+            runtime = Runtime.getRuntime()
+            cmd = f"screencap -p {screenshot_path}"
+            process = runtime.exec(cmd)
+            
+            # 等待命令执行完成
+            exit_code = process.waitFor()
+            
+            if exit_code != 0:
+                Logger.warning(f"screencap命令执行失败，退出码: {exit_code}")
                 return None
             
-            # 读取截图文件
-            if os.path.exists(screenshot_path):
-                # 使用PIL读取图片
-                image = Image.open(screenshot_path)
-                
-                # 转换为numpy数组（如果可用）
-                if NUMPY_AVAILABLE:
-                    import numpy as np
-                    # PIL Image转numpy，然后转BGR格式（OpenCV格式）
-                    img_array = np.array(image)
-                    if len(img_array.shape) == 3:
-                        # RGB转BGR
-                        img_array = img_array[:, :, ::-1]
-                    
-                    # 删除临时文件
-                    try:
-                        os.remove(screenshot_path)
-                    except:
-                        pass
-                    
-                    return img_array
-                else:
-                    # 没有NumPy，返回PIL Image
-                    return image
-            else:
+            # 等待文件写入完成
+            time.sleep(0.1)
+            
+            # 检查文件是否存在
+            screenshot_file = File(screenshot_path)
+            if not screenshot_file.exists():
                 Logger.warning(f"截图文件不存在: {screenshot_path}")
                 return None
+            
+            # 使用PIL读取图片
+            image = Image.open(screenshot_path)
+            
+            # 转换为numpy数组（如果可用）
+            if NUMPY_AVAILABLE:
+                import numpy as np
+                # PIL Image转numpy，然后转BGR格式（OpenCV格式）
+                img_array = np.array(image)
+                if len(img_array.shape) == 3:
+                    # RGB转BGR
+                    img_array = img_array[:, :, ::-1]
+                
+                # 删除临时文件
+                try:
+                    screenshot_file.delete()
+                except:
+                    pass
+                
+                Logger.info(f"截图成功: {img_array.shape}")
+                return img_array
+            else:
+                # 没有NumPy，返回PIL Image
+                Logger.info("截图成功（PIL格式）")
+                return image
                 
         except Exception as e:
+            import traceback
             Logger.error(f"Shell截图失败: {e}")
+            Logger.error(f"详细错误: {traceback.format_exc()}")
             return None
     
     def capture_screen(self):
