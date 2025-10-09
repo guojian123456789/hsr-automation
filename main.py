@@ -386,6 +386,13 @@ class HSRAutomationApp(App):
             self.update_status("正在启动游戏...")
             Logger.info(f"准备启动游戏: {self.game_launcher.game_package_name}")
             
+            # 先检查游戏是否安装
+            if not self.game_launcher.is_game_installed():
+                Logger.error("❌ 游戏未安装")
+                self.update_status("游戏未安装")
+                self.reset_buttons()
+                return
+            
             # 启动游戏（不等待固定时间）
             if not self.game_launcher.launch_game():
                 Logger.error("❌ 游戏启动失败")
@@ -394,7 +401,7 @@ class HSRAutomationApp(App):
                 return
             
             Logger.info("✅ 游戏启动命令已发送")
-            self.update_status("等待游戏加载...")
+            self.update_status("游戏已启动，检测中...")
         
         # Step 2: Run automation in background thread
         self.update_status("Running...")

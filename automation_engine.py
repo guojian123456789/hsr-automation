@@ -103,36 +103,45 @@ class AutomationEngine:
         
         # 第一阶段：持续检测 first OR screen/button（无时间限制）
         # 因为游戏刚启动，可能需要较长时间加载
-        Logger.info("🔍 第一阶段：持续检测首次登录按钮或游戏界面（无时间限制）")
-        first_stage_images = ['login_button_first', 'game_start_screen', 'login_button']
+        Logger.info("🔍 第一阶段：检测登录界面...")
+        
+        check_count = 0
         first_button_clicked = False
         
         while True:
             if not self.is_running:
                 return False
             
+            check_count += 1
+            if check_count % 5 == 0:  # 每5秒打印一次
+                Logger.info(f"持续检测中... ({check_count}秒)")
+            
             screenshot = self.image_processor.capture_screen()
             if screenshot is None:
-                Logger.warning("无法获取屏幕截图，1秒后重试")
+                Logger.warning("⚠️ 无法截图，1秒后重试")
                 time.sleep(1)
                 continue
             
             # 优先检测 login_button_first
             result = self.image_processor.find_image(screenshot, 'login_button_first')
             if result:
-                Logger.info("✅ 找到首次登录按钮，立即点击")
+                Logger.info("✅ 找到首次登录按钮！")
                 center_x, center_y = result['center']
+                Logger.info(f"坐标: ({center_x}, {center_y})")
+                
                 if self.game_controller.click_position((center_x, center_y)):
-                    Logger.info("首次登录按钮点击成功，等待2秒界面切换")
+                    Logger.info("✅ 首次登录按钮点击成功")
                     time.sleep(2)
                     first_button_clicked = True
-                    break  # 点击first后进入第二阶段
+                    break
+                else:
+                    Logger.error("❌ 点击失败")
             
             # 如果没有first，检测screen或button（可能直接出现）
             for image_name in ['game_start_screen', 'login_button']:
                 result = self.image_processor.find_image(screenshot, image_name)
                 if result:
-                    Logger.info(f"✅ 直接检测到: {image_name}（跳过first）")
+                    Logger.info(f"✅ 直接检测到: {image_name}")
                     # 直接进入第二阶段处理
                     break
             else:

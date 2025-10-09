@@ -89,27 +89,36 @@ class GameLauncher:
             Logger.info(f"🚀 正在启动游戏: {self.game_package_name}")
             
             activity = self.PythonActivity.mActivity
+            Logger.info(f"Activity获取成功: {activity}")
+            
             pm = activity.getPackageManager()
+            Logger.info(f"PackageManager获取成功: {pm}")
             
             # 获取游戏的启动Intent
             launch_intent = pm.getLaunchIntentForPackage(self.game_package_name)
+            Logger.info(f"LaunchIntent: {launch_intent}")
             
             if launch_intent:
                 # 设置标志：清除任务栈并创建新任务
                 launch_intent.addFlags(self.Intent.FLAG_ACTIVITY_NEW_TASK)
                 launch_intent.addFlags(self.Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 
+                Logger.info(f"Intent flags已设置")
+                
                 # 启动游戏
                 activity.startActivity(launch_intent)
                 
-                Logger.info("✅ 游戏已启动")
+                Logger.info("✅ 游戏启动命令已发送")
                 return True
             else:
-                Logger.error(f"无法获取游戏启动Intent: {self.game_package_name}")
+                Logger.error(f"❌ 无法获取游戏启动Intent: {self.game_package_name}")
+                Logger.error("可能原因：1.包名错误 2.游戏未安装 3.游戏无启动Activity")
                 return False
                 
         except Exception as e:
-            Logger.error(f"启动游戏失败: {e}")
+            import traceback
+            Logger.error(f"❌ 启动游戏失败: {e}")
+            Logger.error(f"详细错误: {traceback.format_exc()}")
             return False
     
     def launch_game_and_wait(self, wait_seconds=3):
