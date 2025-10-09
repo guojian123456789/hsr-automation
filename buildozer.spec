@@ -1,6 +1,6 @@
 [app]
 
-# Build version: 1.0.3-restore-query-permission
+# Build version: 1.0.5-enable-pillow-matching
 # Last updated: 2025-10-09
 
 # (str) Title of your application
@@ -26,7 +26,7 @@ version = 1.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy
+requirements = python3,kivy,pillow
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes

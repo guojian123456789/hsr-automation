@@ -48,7 +48,7 @@ from game_launcher import GameLauncher, GamePackageNames
 class HSRAutomationApp(App):
     """Honkai Star Rail Automation Application"""
     
-    APP_VERSION = "1.0.2-fix-apk-build"  # 应用版本标记
+    APP_VERSION = "1.0.5-enable-pillow-matching"  # 应用版本标记
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -169,7 +169,6 @@ class AndroidScreenCapture:
         
         try:
             from jnius import autoclass
-            from PIL import Image
             import time
             
             # 获取Java类
@@ -181,7 +180,7 @@ class AndroidScreenCapture:
             cache_dir = context.getCacheDir().getAbsolutePath()
             screenshot_path = f"{cache_dir}/screenshot_temp.png"
             
-            Logger.info(f"截图路径: {screenshot_path}")
+            Logger.info(f"📸 截图路径: {screenshot_path}")
             
             # 执行screencap命令
             runtime = Runtime.getRuntime()
@@ -196,7 +195,7 @@ class AndroidScreenCapture:
                 return None
             
             # 等待文件写入完成
-            time.sleep(0.1)
+            time.sleep(0.2)
             
             # 检查文件是否存在
             screenshot_file = File(screenshot_path)
@@ -204,30 +203,43 @@ class AndroidScreenCapture:
                 Logger.warning(f"截图文件不存在: {screenshot_path}")
                 return None
             
-            # 使用PIL读取图片
-            image = Image.open(screenshot_path)
+            file_size = screenshot_file.length()
+            Logger.info(f"📊 截图文件大小: {file_size} 字节")
             
-            # 转换为numpy数组（如果可用）
-            if NUMPY_AVAILABLE:
-                import numpy as np
-                # PIL Image转numpy，然后转BGR格式（OpenCV格式）
-                img_array = np.array(image)
-                if len(img_array.shape) == 3:
-                    # RGB转BGR
-                    img_array = img_array[:, :, ::-1]
+            if file_size == 0:
+                Logger.warning("截图文件为空")
+                return None
+            
+            # 尝试使用PIL加载图片并转换为数组
+            try:
+                from PIL import Image
+                import io
                 
-                # 删除临时文件
-                try:
-                    screenshot_file.delete()
-                except:
-                    pass
+                # 读取文件
+                with open(screenshot_path, 'rb') as f:
+                    img_data = f.read()
                 
-                Logger.info(f"截图成功: {img_array.shape}")
-                return img_array
-            else:
-                # 没有NumPy，返回PIL Image
-                Logger.info("截图成功（PIL格式）")
+                # 使用PIL加载
+                image = Image.open(io.BytesIO(img_data))
+                
+                Logger.info(f"✅ PIL加载成功: {image.size}, 模式: {image.mode}")
+                
+                # 转换为RGB（如果需要）
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                
+                # 返回PIL Image对象
+                # image_processor会处理PIL Image
                 return image
+                
+            except ImportError:
+                Logger.warning("⚠️ PIL不可用，返回文件路径")
+                # 如果PIL不可用，返回文件路径
+                return screenshot_path
+            except Exception as e:
+                Logger.error(f"PIL加载失败: {e}")
+                # 加载失败，返回文件路径作为后备方案
+                return screenshot_path
                 
         except Exception as e:
             import traceback
