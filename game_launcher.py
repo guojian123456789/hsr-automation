@@ -163,18 +163,24 @@ class GameLauncher:
             activity = self.PythonActivity.mActivity
             pm = activity.getPackageManager()
             
+            Logger.info(f"开始检测游戏，共 {len(common_games)} 个候选")
+            
             for game_name, package_name in common_games:
                 try:
+                    Logger.info(f"检测: {package_name}")
                     pm.getPackageInfo(package_name, 0)
                     installed_games.append((game_name, package_name))
-                    Logger.info(f"发现已安装游戏: {game_name} ({package_name})")
-                except:
-                    pass
+                    Logger.info(f"✅ 发现已安装游戏: {game_name} ({package_name})")
+                except Exception as e:
+                    Logger.info(f"❌ {package_name} 未安装: {e}")
             
+            Logger.info(f"检测完成，找到 {len(installed_games)} 个游戏")
             return installed_games
             
         except Exception as e:
+            import traceback
             Logger.error(f"获取游戏列表失败: {e}")
+            Logger.error(f"详细错误: {traceback.format_exc()}")
             return []
     
     def auto_detect_game(self):
